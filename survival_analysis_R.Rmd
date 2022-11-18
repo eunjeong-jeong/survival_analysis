@@ -1,0 +1,58 @@
+---
+title: "Survival Analysis"
+author: "EunJeong Jeong"
+output: html_document
+---
+
+```{r library}
+library(interval)
+```
+
+## 중도절단 자료
+### 구간중도절단 자료(interval censoring)
+1. bcos data(Breast Cosmesis Data)    
+left: TL(event가 관측되지 않은 마지막 시점)   
+right: TR(event가 처음으로 관측된 시점)    
+treatment: (factor)Rad, RadChem   
+```{r}
+data(bcos)    #94 obs. of 3 variables
+#help(bcos)
+head(bcos,10)
+str(bcos)
+```
+right(TR)가 Inf인 관측치는 우중도절단이라고 볼 수 있다. 즉, follow-up 기간 동안 유방함몰 진단을 받지 않았다는 뜻이다.   
+bcos data는 뒤에 소개할 paquid data와 달리 longitudinal data가 아니다. 한 환자에 대해 하나의 관측치만 존재한다.   
+   
+94명의 유방암 환자들의 유방 함몰 시점에 대한 생존함수추정을 위해 icfit함수를 사용한다.    
+
+```{r}
+## Surv 함수를 사용한 구간중도절단의 포현
+Surv(bcos$left,bcos$right,type='interval2')
+```
+```{r}
+fit.ic1 <- icfit(Surv(left,right,type='interval2')~treatment, data=bcos)
+summary(fit.ic1)
+```
+treatment 'Rad'와 'RadChem'에 따라 생존함수가 각각 추정되었다.  
+
+생존 곡선을 그려보면 다음과 같다.   
+```{r}
+plot(fit.ic1)
+```
+
+만일 공변량을 사용하지 않고 모형을 적합한다면 strata가 1개일 것이고, A matrix를 도출할 수 있다.   
+```{r}
+fit.ic2 <- icfit(Surv(left,right,type='interval2')~1, data=bcos)
+summary(fit.ic2)
+```
+
+```{r}
+fit.ic2$A    #각 환자의 TL, TR이 어느 구간에 속하는지 알려주는 indicator이다.   
+```
+
+```{r}
+#interval censoring 
+fit.ic1$intmap
+fit.ic2$intmap
+```
+
